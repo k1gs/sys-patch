@@ -5,8 +5,6 @@
 #include <utility> // std::unreachable
 #include <switch.h>
 #include "minIni/minIni.h"
-#include <cstdlib>
-#include <string>
 
 namespace {
 
@@ -31,10 +29,6 @@ struct DebugEventInfo {
     char process_name[12];
     u32 mmu_flags;
     u8 _0x30[0x10];
-};
-
-class puts {
-    int *ini_puts();
 };
 
 template<typename T>
@@ -553,7 +547,6 @@ int main(int argc, char* argv[]) {
     const auto enable_logging = ini_load_or_write_default("options", "enable_logging", 1, ini_path);
     VERSION_SKIP = ini_load_or_write_default("options", "version_skip", 1, ini_path);
 
-
     // load patch toggles
     for (auto& patch : patches) {
         for (auto& p : patch.patterns) {
@@ -622,43 +615,17 @@ int main(int argc, char* argv[]) {
         // defined in the Makefile
         #define DATE (DATE_DAY "." DATE_MONTH "." DATE_YEAR " " DATE_HOUR ":" DATE_MIN ":" DATE_SEC)
 
-
-        
-
-        std::string buffer;
-        buffer.reserve(1024);
-
-        for (auto& patch : patches) {
-            buffer += patch.name;
-            buffer += "\n";
-            for (auto& p : patch.patterns) {
-                if (!enable_patching) {
-                    p.result = PatchResult::SKIPPED;
-                }
-                buffer += (std::string)p.patch_name + "=" + patch_result_to_str(p.result) + "\n";
-            }
-        }
-
-        buffer += "[stats]\n";
-        buffer += (std::string)"version=" + VERSION_WITH_HASH + "\n";
-        buffer += (std::string)"build_date=" + DATE + "\n";
-        buffer += (std::string)"fw_version=" + fw_version + "\n";
-        buffer += (std::string)"ams_version=" + ams_version + "\n";
-        buffer += (std::string)"ams_target_version=" + ams_target_version + "\n";
-        buffer += (std::string)"ams_keygen=" + ams_keygen + "\n";
-        buffer += (std::string)"ams_hash=" + ams_hash + "\n";
-        buffer += (std::string)"is_emummc=" + std::to_string(emummc) + "\n";
-        buffer += (std::string)"heap_size=" + std::to_string(INNER_HEAP_SIZE) + "\n";
-        buffer += (std::string)"buffer_size=" + std::to_string(READ_BUFFER_SIZE) + "\n";
-        buffer += (std::string)"patch_time=" + VERSION_WITH_HASH + "\n";
-        INI_FILETYPE wfp;
-        if (ini_openwrite(log_path, &wfp))
-        {
-            ini_write(buffer.c_str(), &wfp);
-            ini_close(&wfp);
-        }
-        
-        
+        ini_puts("stats", "version", VERSION_WITH_HASH, log_path);
+        ini_puts("stats", "build_date", DATE, log_path);
+        ini_puts("stats", "fw_version", fw_version, log_path);
+        ini_puts("stats", "ams_version", ams_version, log_path);
+        ini_puts("stats", "ams_target_version", ams_target_version, log_path);
+        ini_puts("stats", "ams_keygen", ams_keygen, log_path);
+        ini_puts("stats", "ams_hash", ams_hash, log_path);
+        ini_putl("stats", "is_emummc", emummc, log_path);
+        ini_putl("stats", "heap_size", INNER_HEAP_SIZE, log_path);
+        ini_putl("stats", "buffer_size", READ_BUFFER_SIZE, log_path);
+        ini_puts("stats", "patch_time", patch_time, log_path);
     }
 
     // note: sysmod exits here.
